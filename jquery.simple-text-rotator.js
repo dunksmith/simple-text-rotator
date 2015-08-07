@@ -16,7 +16,10 @@
   var defaults = {
 		animation: "dissolve",
 		separator: ",",
-		speed: 2000
+		speed: 2000,
+		repeat: true,
+		text: null,
+		onFinish: function () { }
 	};
 	
 	$.fx.step.textShadowBlur = function(fx) {
@@ -29,11 +32,29 @@
     return this.each(function(){
       var el = $(this)
       var array = [];
-      $.each(el.text().split(settings.separator), function(key, value) { 
+
+      var text = settings.text || el.text();
+
+      $.each(text.split(settings.separator), function(key, value) { 
         array.push(value); 
       });
       el.text(array[0]);
       
+      var index;
+      var checkIndexOverflow = function () {
+          index = $.inArray(el.text(), array)
+          if ((index + 1) == array.length) {
+              index = -1;
+
+              if (settings.repeat == false) {
+                  clearInterval(timerId);
+                  settings.onFinish();
+                  return false;
+              }
+          }
+          return true;
+      };
+
       // animation option
       var rotate = function() {
         switch (settings.animation) { 
@@ -42,8 +63,7 @@
               textShadowBlur:20,
               opacity: 0
             }, 500 , function() {
-              index = $.inArray(el.text(), array)
-              if((index + 1) == array.length) index = -1
+              checkIndexOverflow();
               el.text(array[index + 1]).animate({
                 textShadowBlur:0,
                 opacity: 1
@@ -57,8 +77,7 @@
             }
           
             var initial = el.text()
-            var index = $.inArray(initial, array)
-            if((index + 1) == array.length) index = -1
+            checkIndexOverflow();
             
             el.html("");
             $("<span class='front'>" + initial + "</span>").appendTo(el);
@@ -78,8 +97,7 @@
             }
           
             var initial = el.text()
-            var index = $.inArray(initial, array)
-            if((index + 1) == array.length) index = -1
+            checkIndexOverflow();
             
             el.html("");
             $("<span class='front'>" + initial + "</span>").appendTo(el);
@@ -99,8 +117,7 @@
             }
           
             var initial = el.text()
-            var index = $.inArray(initial, array)
-            if((index + 1) == array.length) index = -1
+            checkIndexOverflow();
             
             el.html("");
             $("<span class='front'>" + initial + "</span>").appendTo(el);
@@ -120,8 +137,7 @@
             }
           
             var initial = el.text()
-            var index = $.inArray(initial, array)
-            if((index + 1) == array.length) index = -1
+            checkIndexOverflow();
             
             el.html("");
             $("<span class='front'>" + initial + "</span>").appendTo(el);
@@ -139,8 +155,7 @@
             if(el.find(".rotating").length > 0) {
               el.html(el.find(".rotating").html())
             }
-            index = $.inArray(el.text(), array)
-            if((index + 1) == array.length) index = -1
+            checkIndexOverflow();
             
             el.wrapInner("<span class='rotating spin' />").find(".rotating").hide().text(array[index + 1]).show().css({
               "-webkit-transform": " rotate(0) scale(1)",
@@ -152,14 +167,14 @@
           
           case 'fade':
             el.fadeOut(settings.speed, function() {
-              index = $.inArray(el.text(), array)
-              if((index + 1) == array.length) index = -1
+              checkIndexOverflow();
               el.text(array[index + 1]).fadeIn(settings.speed);
             });
           break;
         }
       };
-      setInterval(rotate, settings.speed);
+
+      var timerId = setInterval(rotate, settings.speed);
     });
   }
   
